@@ -1,0 +1,12 @@
+decode.py
+decode2.py
+evaluate.py
+logs/
+__pycache__
+*.ipynb
+scratch.py
+start_notebook.sh
+start_tensorboard.sh
+summary
+*.swp
+*.swo

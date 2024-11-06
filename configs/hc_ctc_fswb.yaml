@@ -1,0 +1,52 @@
+corpus: 'fisher_swb'
+model_name: 'hc_ctc'
+seed: 1111
+distributed:
+        node_rank: null
+        world_size: null
+        ddp: null
+        gpu_num: 2
+        gpus: 2
+        nnodes: 1
+features:
+        n_mels: 40
+        sample_rate: 8000
+        wav_len: 24
+        fmask: 15
+model:
+        vocab_size: null
+        inter_vocab_size: null
+        dropout: 0.1
+        headDim: 64
+        hidDim: 512
+        n_layer: 20
+        nhead: 8
+        num_ctc: 4
+trainer:
+        steps_done: 0
+        epochs_done: 0
+        nepochs: 48
+        bsz_small: 16
+        batch_size: 256
+        base_batch_size: 256
+        clip: 1.0
+        base_lr: 5e-4
+        lr: null
+        anneal_strategy: 'linear'
+        pct_start: 0.3
+        div_factor: 10
+        final_div_factor: 1e8
+        load_opt: False
+        load_sch: False
+        log_after: 10
+paths:
+        save_path: '/research/nfs_fosler_1/vishal/saved_models/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}.pth.tar'
+        ckpt_path: ''
+        train_path: '/research/nfs_fosler_1/vishal/text/fisher_swb/fisher_swbAug.csv'
+        tokenizer_path: '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_fisher_swb_16384.json'
+        inter_tokenizer_paths: ['/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_fisher_swb_256.json',
+                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_fisher_swb_1024.json',
+                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_fisher_swb_4096.json',
+                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_fisher_swb_16384.json']
+        logging_file: 'logs/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}.log'
+        summary_path: 'summary/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}'
