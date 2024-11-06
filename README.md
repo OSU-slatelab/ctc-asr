@@ -48,6 +48,7 @@ To train any of these models, use the following script:
 
 ```bash
 bash run_training.sh
+```
 
 ### Configuration
 
