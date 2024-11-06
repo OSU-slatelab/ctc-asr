@@ -40,6 +40,7 @@ This repository contains implementations of three Automatic Speech Recognition (
        organization={IEEE}
      }
      ```
+`requirements.txt` contains the libraries I had installed (some of them might not be needed).
 
 ### Training the Models
 
@@ -48,3 +49,6 @@ To train any of these models, use the following script:
 ```bash
 bash run_training.sh
 
+### Configuration
+
+The configs for all models can be found in `config/` directory.
