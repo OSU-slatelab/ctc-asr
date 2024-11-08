@@ -1,7 +1,7 @@
-decode.py
 decode2.py
 evaluate.py
 logs/
+decodes/
 __pycache__
 *.ipynb
 scratch.py

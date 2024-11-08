@@ -9,9 +9,10 @@ distributed:
         gpus: 2
         nnodes: 1
 features:
+        downsample: 8
         n_mels: 80
         sample_rate: 16000
-        wav_len: 24
+        wav_len: 30
         fmask: 27
 model:
         vocab_size: null
@@ -19,15 +20,16 @@ model:
         dropout: 0.1
         headDim: 64
         hidDim: 512
-        n_layer: 20
+        n_layer: 24
         nhead: 8
+        conv_kernel_size: 9
         num_ctc: 4
 trainer:
         iterations_done: 0
         epochs_done: 0
         nepochs: 20
-        bsz_small: 16
-        batch_size: 512
+        bsz_small: 32
+        batch_size: 256
         base_batch_size: 256
         clip: 1.0
         base_lr: 5e-4
@@ -40,13 +42,15 @@ trainer:
         load_sch: False
         log_after: 10
 paths:
-        save_path: '/research/nfs_fosler_1/vishal/saved_models/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}E${trainer.nepochs}.pth.tar'
+        save_path: '/research/nfs_fosler_1/vishal/saved_models/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}DS${features.downsample}E${trainer.nepochs}.pth.tar'
         ckpt_path: ''
-        train_path: '/research/nfs_fosler_1/vishal/text/all_data_combined/train_all.csv'
-        tokenizer_path: '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_full_16384.json'
-        inter_tokenizer_paths: ['/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_full_256.json',
-                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_full_1024.json',
-                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_full_4096.json',
-                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_full_16384.json']
-        logging_file: 'logs/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}E${trainer.nepochs}.log'
-        summary_path: 'summary/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}E${trainer.nepochs}'
+        train_path: '/research/nfs_fosler_1/vishal/text/all_data_combined/full_aug.csv'
+        test_path: ''
+        decode_path: ''
+        tokenizer_path: '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_all_32768.json'
+        inter_tokenizer_paths: ['/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_all_512.json',
+                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_all_2048.json',
+                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_all_8192.json',
+                                  '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_all_32768.json']
+        logging_file: 'logs/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}DS${features.downsample}E${trainer.nepochs}.log'
+        summary_path: 'summary/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}DS${features.downsample}E${trainer.nepochs}'

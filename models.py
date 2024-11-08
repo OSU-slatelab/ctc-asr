@@ -14,6 +14,7 @@ from omegaconf import DictConfig
 from tqdm import tqdm
 from util import *
 from encoders import *
+from tokenizers import decoders
 
 def logsumexp(a, b):
     return np.log(np.exp(a) + np.exp(b))
@@ -34,12 +35,14 @@ class baseCTC(nn.Module):
     def from_pretrained(cls, cfg, checkpoint_path=None, device='cpu'):
         if not cfg.model.vocab_size:
             cls.tokenizer = Tokenizer.from_file(cfg.paths.tokenizer_path)
+            cls.tokenizer.decoder = decoders.WordPiece()
             cfg.model.vocab_size = cls.tokenizer.get_vocab_size()
             if cfg.model_name == 'hc_ctc':
                 cls.inter_tokenizers = []
                 cfg.model.inter_vocab_size = []
                 for p in cfg.paths.inter_tokenizer_paths:
                     tok = Tokenizer.from_file(p)
+                    tok.decoder = decoders.WordPiece()
                     cls.inter_tokenizers.append(tok)
                     cfg.model.inter_vocab_size.append(tok.get_vocab_size())
 
@@ -50,8 +53,11 @@ class baseCTC(nn.Module):
             load_dict(model, checkpoint['state_dict'], ddp=cfg.distributed.ddp)
         return model
 
-    def transcribe(self, path):
+    @torch.no_grad()
+    def transcribe(self, path, layer_num=None):
         self.eval()
+        if layer_num is not None and self.cfg.model_name == 'ctc':
+            raise ValueError('cannot infer inter layer in ctc')
         wav, sr = torchaudio.load(path)
         if sr != self.cfg.features.sample_rate:
             wav = AT.Resample(sr, self.cfg.features.sample_rate)(wav)
@@ -62,11 +68,29 @@ class baseCTC(nn.Module):
         features, _ = normalize_spec(features)
         x = self.downsampler(features)
         y, _, _, y_inter = self.encoder(x) # (T, 1, C)
-        y = y.squeeze(1) # (T, C)
-        indices = torch.argmax(y, dim=-1)
+        if layer_num is None:
+            y_i = y
+        else:
+            y_i = y_inter[layer_num]
+        y_i = y_i.squeeze(1) # (T, C)
+        indices = torch.argmax(y_i, dim=-1)
         indices = torch.unique_consecutive(indices, dim=-1).tolist()
         indices = [i for i in indices if i != 0]
         return self.tokenizer.decode(indices)
+
+    @torch.no_grad()
+    def transcribe_batch(batch):
+        self.eval()
+        y, _ = self.forward(batch) # (T, 16, C)
+        indices = torch.argmax(y, dim=-1).T # (16, T)
+        outs = []
+        B = indices.size(0)
+        for i in range(B):
+            indices_i = indices[i][:batch.logitLens[i]]
+            indices_i = torch.unique_consecutive(indices_i, dim=-1).tolist()
+            indices_i = [i for i in indices_i if i != 0]
+            outs.append(self.tokenizer.decode(indices_i))
+        return outs
 
 class baseSCCTC(baseCTC):
     def __init__(self, cfg):

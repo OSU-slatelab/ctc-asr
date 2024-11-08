@@ -79,38 +79,20 @@ class ASRDataset(SpeechDataset):
 
     def __getitem__(self, index):
         row = self.df.iloc[index]
-        if self.cfg.corpus == 'librispeech':
-            audio_path = row['audio_file'].replace('/data/corpora2/librispeech/LibriSpeech/', '/research/nfs_fosler_1/vishal/audio/libri/')
-            if os.path.isfile(audio_path):
-                    wav, org_sr = torchaudio.load(audio_path)
-            else:
-                print(f'skipping {audio_path}')
-                return None, -1
-        elif self.cfg.corpus == 'fisher_swb' or self.cfg.corpus == 'all':
-            if '.sph' in row['audio_file']:
-                key = str(row['cnum'])+'_'+str(int(row['utt_id']))
-                audio_path = os.path.join(f'/research/nfs_fosler_1/vishal/audio/fisher', f'{key}.npz')
-                wav = torch.from_numpy(np.load(audio_path)['a'])
-                org_sr = 8000
-            elif 'librispeech' in row['audio_file']:
-                audio_path = row['audio_file'].replace('/data/corpora2/librispeech/LibriSpeech/', '/research/nfs_fosler_1/vishal/audio/libri/')
-                if os.path.isfile(audio_path):
-                    wav, org_sr = torchaudio.load(audio_path)
-                else:
-                    print(f'skipping {audio_path}')
-                    return None, -1
-            else:
-                audio_path = row['audio_file']
-                if os.path.isfile(audio_path):
-                    wav, org_sr = torchaudio.load(audio_path)
-                else:
-                    print(f'skipping {audio_path}')
-                    return None, -1
+        audio_path = row['audio_path']
+        if not os.path.isfile(audio_path):
+            return None, -1
+        if 'npz' in audio_path:
+            wav = torch.from_numpy(np.load(audio_path)['a'])
+            org_sr = 8000
+        else:
+            wav, org_sr = torchaudio.load(audio_path)
+
         if org_sr != self.cfg.features.sample_rate:
             wav = AT.Resample(org_sr, self.cfg.features.sample_rate)(wav)
         wav = self.crop(wav)
         target = row['utterance']
-        sign = f"{row.audio_file.split('/')[-1]}"
+        sign = f"{row.audio_path.split('/')[-1]}"
         return self.get_filterbanks(wav), clean4asr(target), sign
 
 class CollatorCTC(object):
@@ -125,7 +107,7 @@ class CollatorCTC(object):
             sbatch_norm_spec.append(specaug2(x_, mean, fmask_F=self.cfg.features.fmask))
         pack1 = pack_sequence(sbatch_norm_spec, enforce_sorted=False)
         speechB, logitLens = pad_packed_sequence(pack1, batch_first=True)
-        logitLens = torch.ceil(logitLens / 4).int()
+        logitLens = torch.ceil(logitLens / self.cfg.features.downsample).int()
         return speechB, logitLens
 
     def get_target_batch(self, textL, tokenizer):
@@ -140,8 +122,8 @@ class CollatorCTC(object):
         return targetCtc, targetLensCtc
 
     def __call__(self, lst):
-        speechL = [x[0].squeeze(0) for x in lst if x[0].size(1) > 2 and len(x[1]) > 1]
-        textL = [x[1] for x in lst if x[0].size(1) > 2 and len(x[1]) > 1]
+        speechL = [x[0].squeeze(0) for x in lst if x[0].size(1) > self.cfg.features.downsample * 4 and len(x[1]) > 1]
+        textL = [x[1] for x in lst if x[0].size(1) > self.cfg.features.downsample * 4 and len(x[1]) > 1]
         if len(speechL) == 0 or len(textL) == 0:
             return
 
@@ -158,8 +140,8 @@ class CollatorSCCTC(CollatorCTC):
         super(CollatorSCCTC, self).__init__(cfg, tokenizer)
 
     def __call__(self, lst):
-        speechL = [x[0].squeeze(0) for x in lst if x[0].size(1) > 2 and len(x[1]) > 1]
-        textL = [x[1] for x in lst if x[0].size(1) > 2 and len(x[1]) > 1]
+        speechL = [x[0].squeeze(0) for x in lst if x[0].size(1) > self.cfg.features.downsample * 4 and len(x[1]) > 1]
+        textL = [x[1] for x in lst if x[0].size(1) > self.cfg.features.downsample * 4 and len(x[1]) > 1]
         if len(speechL) == 0 or len(textL) == 0:
             return
 
@@ -181,8 +163,8 @@ class CollatorHCCTC(CollatorCTC):
         self.inter_tokenizers = inter_tokenizers
 
     def __call__(self, lst):
-        speechL = [x[0].squeeze(0) for x in lst if x[0].size(1) > 2 and len(x[1]) > 1]
-        textL = [x[1] for x in lst if x[0].size(1) > 2 and len(x[1]) > 1]
+        speechL = [x[0].squeeze(0) for x in lst if x[0].size(1) > self.cfg.features.downsample * 4 and len(x[1]) > 1]
+        textL = [x[1] for x in lst if x[0].size(1) > self.cfg.features.downsample * 4 and len(x[1]) > 1]
         if len(speechL) == 0 or len(textL) == 0:
             return
 

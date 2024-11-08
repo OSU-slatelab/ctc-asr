@@ -18,13 +18,26 @@ def count_parameters(model):
 class DownSampler(nn.Module):
     def __init__(self, cfg):
         super(DownSampler, self).__init__()
-        self.conv = nn.Sequential(nn.Conv2d(in_channels=1, out_channels=256, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+        if cfg.features.downsample == 4:
+            self.conv = nn.Sequential(nn.Conv2d(in_channels=1, out_channels=256, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
+                                     nn.SiLU(),
+                                     nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3,3), stride=(2,2), padding=(1,1), groups=256),
+                                     nn.Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1)),
+                                     nn.SiLU(),
+                                     )
+        elif cfg.features.downsample == 8:
+            self.conv = nn.Sequential(nn.Conv2d(in_channels=1, out_channels=256, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
                                  nn.SiLU(),
                                  nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3,3), stride=(2,2), padding=(1,1), groups=256),
                                  nn.Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1)),
                                  nn.SiLU(),
+                                 nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(3,3), stride=(2,2), padding=(1,1), groups=256),
+                                 nn.Conv2d(256, 256, kernel_size=(1, 1), stride=(1, 1)),
+                                 nn.SiLU()
                                  )
-        self.out = nn.Sequential(nn.Dropout(0.1), nn.Linear(256 * cfg.features.n_mels // 4, cfg.model.hidDim))
+        else:
+            raise ValueError(f'cfg.features.downsample should be 4 or 8')
+        self.out = nn.Sequential(nn.Dropout(0.1), nn.Linear(256 * cfg.features.n_mels // cfg.features.downsample, cfg.model.hidDim))
 
     def forward(self, x):
         x = x.unsqueeze(1)
@@ -50,7 +63,7 @@ class DownSampler(nn.Module):
 class ConformerLayer(nn.Module):
     def __init__(self, cfg):
         super(ConformerLayer, self).__init__()
-        self.block = ConformerBlock(dim = cfg.model.hidDim, dim_head=cfg.model.headDim, heads=cfg.model.nhead, ff_mult = 4, conv_expansion_factor = 2, conv_kernel_size = 32, attn_dropout = cfg.model.dropout, ff_dropout = cfg.model.dropout, conv_dropout = cfg.model.dropout)
+        self.block = ConformerBlock(dim = cfg.model.hidDim, dim_head=cfg.model.headDim, heads=cfg.model.nhead, ff_mult = 4, conv_expansion_factor = 2, conv_kernel_size = cfg.model.conv_kernel_size, attn_dropout = cfg.model.dropout, ff_dropout = cfg.model.dropout, conv_dropout = cfg.model.dropout)
         
     def forward(self, x):
         return self.block(x)

@@ -40,6 +40,11 @@ This repository contains implementations of three Automatic Speech Recognition (
        organization={IEEE}
      }
      ```
+The convolutional subsampling approach is taken from [Fast Conformer Nvidia](https://arxiv.org/pdf/2305.05084) which uses an 8x downsampling of audio making the Conformer very fast.
+
+However, a lower downsampling of 4x can be used by setting `cfg.features.downsample: 4`
+
+
 `requirements.txt` contains the libraries I had installed (some of them might not be needed).
 
 ### Training the Models
@@ -53,3 +58,14 @@ bash run_training.sh
 ### Configuration
 
 The configs for all models can be found in `config/` directory.
+
+### Decoding
+
+The `run_decode.sh` will run decoding over a corpus and report WER
+
+To decode a specific audio file use a `yaml` config `cfg`,
+```
+model = baseHCCTC.from_pretrained(cfg, cfg.paths.ckpt_path) # cfg.paths.ckpt_path path where checkpoint is saved
+transcription = model.transcribe(/path/to/audio_file)
+print(transcription)
+```
