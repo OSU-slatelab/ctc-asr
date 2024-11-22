@@ -118,6 +118,7 @@ def worker(gpu, cfg):
 def main(cfg):
     cfg.distributed.world_size = cfg.distributed.gpus * cfg.distributed.nnodes
     cfg.trainer.lr = cfg.trainer.base_lr * ((cfg.trainer.batch_size / cfg.trainer.base_batch_size)**0.5)
+    cfg.trainer.pct_start = 1. / cfg.trainer.nepochs
     if cfg.distributed.world_size > 1:
         cfg.distributed.ddp = True
     else:

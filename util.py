@@ -175,20 +175,21 @@ def inject_seqn(X):
     X = torch.log(torch.exp(X) + 0.4 * torch.exp(X[Z]) * mask_sn)
     return X
 
-def load_dict(model, ptdict, ddp=True):
-    #pretrained_dict = torch.load(dict_path, map_location=loc)
+def load_dict(model, ptdict, ddp=False):
     pretrained_dict = ptdict
     model_dict = model.state_dict()
     new_pt_dict = {}
     for k, v in pretrained_dict.items():
         k_new = k
-        #print(k)
         if not ddp and k[:7] == 'module.':
             k_new = k[7:]
         elif ddp and k[:7] != 'module.':
             k_new = f'module.{k}'
         new_pt_dict[k_new] = v
     pretrained_dict = {k: v for k, v in new_pt_dict.items() if k in model_dict}
+    #for k, v in new_pt_dict.items():
+    #    if k not in model_dict:
+    #        print(f'NOT PRESENT = {k}')
     model_dict.update(pretrained_dict)
     model.load_state_dict(model_dict)
     return model

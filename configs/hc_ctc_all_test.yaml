@@ -1,4 +1,4 @@
-corpus: 'all'
+corpus: 'librispeech'
 model_name: 'hc_ctc'
 seed: 1111
 distributed:
@@ -27,19 +27,19 @@ model:
 trainer:
         iterations_done: 0
         epochs_done: 0
-        nepochs: 48
+        nepochs: 20
         bsz_small: 32
         batch_size: 256
         base_batch_size: 256
         clip: 1.0
-        base_lr: 2e-4
+        base_lr: 5e-4
         lr: null
         anneal_strategy: 'linear'
         pct_start: 0.3
         div_factor: 10
-        final_div_factor: 1e12
-        load_opt: True
-        load_sch: True
+        final_div_factor: 1e8
+        load_opt: False
+        load_sch: False
         log_after: 10
 paths:
         save_path: '/research/nfs_fosler_1/vishal/saved_models/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}DS${features.downsample}E${trainer.nepochs}.pth.tar'
@@ -53,4 +53,4 @@ paths:
                                   '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_all_8192.json',
                                   '/research/nfs_fosler_1/vishal/text/tokenizers/saved/tokenizer_all_32768.json']
         logging_file: 'logs/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}DS${features.downsample}E${trainer.nepochs}.log'
-        summary_path: 'summary/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}DS${features.downsample}E${trainer.nepochs}_2'
+        summary_path: 'summary/${model_name}_${corpus}_H${model.hidDim}L${model.n_layer}DS${features.downsample}E${trainer.nepochs}'

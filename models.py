@@ -9,6 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import hydra
 import torchaudio
+import torchaudio.transforms as AT
 from torch.nn.utils.rnn import pack_sequence, pad_packed_sequence
 from omegaconf import DictConfig
 from tqdm import tqdm
@@ -50,7 +51,7 @@ class baseCTC(nn.Module):
         model = cls(cfg).to(device_obj)
         if checkpoint_path:
             checkpoint = torch.load(checkpoint_path, map_location=device)
-            load_dict(model, checkpoint['state_dict'], ddp=cfg.distributed.ddp)
+            load_dict(model, checkpoint['state_dict'])
         return model
 
     @torch.no_grad()

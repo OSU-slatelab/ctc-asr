@@ -35,6 +35,8 @@ class TestDataset(torch.utils.data.Dataset):
         if self.cfg.corpus == 'librispeech':
             path = row.audio_file.replace('/data/corpora2/librispeech/LibriSpeech/',
                                           '/research/nfs_fosler_1/vishal/audio/libri/')
+        else:
+            path = row.audio_file
         ground_truth = clean4asr(row.utterance)
         return path, ground_truth
 
@@ -86,8 +88,8 @@ def main(cfg):
     print(f'Starting transcription.')
     with open(os.path.join(cfg.paths.decode_path, f'{rank}.txt'), 'w') as dP:
         for audio_path, text in tqdm(loader, disable=(rank!=0)):
-            hyp = model.transcribe(audio_path[0]).replace(" ' ", "'")
-            gt = text[0]
+            hyp = model.transcribe(audio_path[0]).replace(" ' ", "'").replace("-", "")
+            gt = text[0].replace("-", "")
             logger.info(f'{audio_path[0]} ----> {gt} ----> {hyp}')
             dP.write(f'{audio_path[0]} ----> {gt} ----> {hyp}\n')
 

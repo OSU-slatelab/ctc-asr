@@ -13,6 +13,7 @@ import random
 import math
 import torch
 import time
+import pickle
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -81,16 +82,34 @@ class Trainer(object):
                 if step % self.update_after != 0 and step != len(self.loader):
                     with self.model.no_sync() if self.cfg.distributed.ddp else nullcontext():
                         loss = self.forward(batch)
+                        #####
                         if torch.isnan(loss):
                             print(f'encountered NaN loss!! please double check')
+                            with open("nan_batch_instance.pkl", "wb") as f:
+                                pickle.dump(batch, f)
+                            torch.save(batch, "nan_batch_instance.pt")
+                            if self.rank == 0 or not self.cfg.distributed.ddp:
+                                checkpoint = {'state_dict':self.model.state_dict(), 'optimizer':self.optimizer.state_dict(), 'scheduler':self.scheduler.state_dict(), 'epochs_done':epoch, 'iterations_done':iterations}
+                                save_checkpoint(checkpoint, f'nan_model.pth.tar')
+                            continue
+                        ####
                         loss.backward()
                         for loss_name in self.statsE.losses:
                             self.statsE.backward(loss_name, getattr(self, loss_name).detach())
                             self.statsI.backward(loss_name, getattr(self, loss_name).detach())
                 else:
                     loss = self.forward(batch)
+                    ###
                     if torch.isnan(loss):
                         print(f'encountered NaN loss!! please double check')
+                        with open("nan_batch_instance.pkl", "wb") as f:
+                            pickle.dump(batch, f)
+                        torch.save(batch, "nan_batch_instance.pt")
+                        if self.rank == 0 or not self.cfg.distributed.ddp:
+                            checkpoint = {'state_dict':self.model.state_dict(), 'optimizer':self.optimizer.state_dict(), 'scheduler':self.scheduler.state_dict(), 'epochs_done':epoch, 'iterations_done':iterations}
+                            save_checkpoint(checkpoint, f'nan_model.pth.tar')
+                        continue
+                    ###
                     loss.backward()
                     for loss_name in self.statsE.losses:
                         self.statsE.backward(loss_name, getattr(self, loss_name).detach())
@@ -144,6 +163,7 @@ class TrainerHC(Trainer):
         self.loader = torch.utils.data.DataLoader(data, batch_size=cfg.trainer.bsz_small, shuffle=self.shuffle, num_workers=4, collate_fn=collator, pin_memory=True, sampler=sampler)
         self.scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=cfg.trainer.lr, epochs=cfg.trainer.nepochs, steps_per_epoch=math.ceil(1. * len(self.loader) / self.update_after), anneal_strategy=cfg.trainer.anneal_strategy, pct_start=cfg.trainer.pct_start, div_factor=cfg.trainer.div_factor, final_div_factor=cfg.trainer.final_div_factor)
         if checkpoint is not None and cfg.trainer.load_sch:
+            print(f'Loading scheduler.')
             self.scheduler.load_state_dict(checkpoint['scheduler'])
 
         self.statsE = statRecorder('loss_last', ddp=cfg.distributed.ddp)

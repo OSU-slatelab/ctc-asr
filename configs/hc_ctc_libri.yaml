@@ -9,7 +9,7 @@ distributed:
         gpus: 2
         nnodes: 1
 features:
-        downsample: 8
+        downsample: 4
         n_mels: 80
         sample_rate: 16000
         wav_len: 30
@@ -22,6 +22,7 @@ model:
         hidDim: 512
         n_layer: 20
         nhead: 8
+        conv_kernel_size: 32
         num_ctc: 4
 trainer:
         iterations_done: 0

@@ -4,6 +4,7 @@ logs/
 decodes/
 __pycache__
 *.ipynb
+*.opus
 scratch.py
 start_notebook.sh
 start_tensorboard.sh
