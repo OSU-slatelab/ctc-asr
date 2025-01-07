@@ -72,14 +72,15 @@ print(transcription)
 
 ### Results
 
-Here are the performance WER on various datasets using a HC-CTC model trained for 48 epochs on a combination of datasets
+Here are the performance WER on various datasets using a HC-CTC model trained for 48 epochs on a combination of datasets.
+We also compare with Whisper-small which is about the same size as our model.
 
-| Dataset                 | WER (no finetuning) | WER (after finetuning) |
-|-------------------------|---------------------|-------------------------|
-| librispeech test-clean  | 3.52                | 3.1                     |
-| librispeech test-other  | 7.89                | 7.05                    |
-| switchboard             | 11.2                | 10.7                    |
-| callhome                | 18.17               | 17.56                   |
-| slurp                   | 13.86               | 12.11                   |
-| tedlium2                | 6.48                | 6.11                    |
+| Dataset                 | WER (no finetuning) | WER (after finetuning) | WER (Whisper-small) |
+|-------------------------|---------------------|-------------------------|---------------------|
+| librispeech test-clean  | 3.52                | 3.1                     | 3.2                 |
+| librispeech test-other  | 7.89                | 7.05                    | 6.7                 |
+| switchboard             | 11.2                | 10.7                    | 13.4                |
+| callhome                | 18.17               | 17.56                   | 17.2                |
+| slurp                   | 13.86               | 12.11                   | 17.8                |
+| tedlium2                | 6.48                | 6.11                    | 6.49                |
 
