@@ -89,7 +89,7 @@ def main(cfg):
     with open(os.path.join(cfg.paths.decode_path, f'{rank}.txt'), 'w') as dP:
         for audio_path, text in tqdm(loader, disable=(rank!=0)):
             hyp = model.transcribe(audio_path[0]).replace(" ' ", "'").replace("-", "")
-            gt = text[0].replace("-", "")
+            gt = text[0].replace("-", "").replace(" '", "'")
             logger.info(f'{audio_path[0]} ----> {gt} ----> {hyp}')
             dP.write(f'{audio_path[0]} ----> {gt} ----> {hyp}\n')
 

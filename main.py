@@ -70,8 +70,9 @@ def worker(gpu, cfg):
     if os.path.isfile(cfg.paths.ckpt_path):
         print(f'Loading checkpoint')
         checkpoint = torch.load(cfg.paths.ckpt_path, map_location=f'cuda:{gpu}')
-        cfg.trainer.epochs_done = checkpoint['epochs_done']
-        cfg.trainer.iterations_done = checkpoint['iterations_done']
+        if not cfg.trainer.reset_iterations:
+            cfg.trainer.epochs_done = checkpoint['epochs_done']
+            cfg.trainer.iterations_done = checkpoint['iterations_done']
 
     # Loading models
     print(f'Loading model.')

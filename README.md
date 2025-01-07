@@ -69,3 +69,17 @@ model = baseHCCTC.from_pretrained(cfg, cfg.paths.ckpt_path) # cfg.paths.ckpt_pat
 transcription = model.transcribe(/path/to/audio_file)
 print(transcription)
 ```
+
+### Results
+
+Here are the performance WER on various datasets using a HC-CTC model trained for 48 epochs on a combination of datasets
+
+| Dataset                 | WER (no finetuning) | WER (after finetuning) |
+|-------------------------|---------------------|-------------------------|
+| librispeech test-clean  | 3.52                | 3.1                     |
+| librispeech test-other  | 7.89                | 7.05                    |
+| switchboard             | 11.2                | 10.7                    |
+| callhome                | 18.17               | 17.56                   |
+| slurp                   | 13.86               | 12.11                   |
+| tedlium2                | 6.48                | 6.11                    |
+
